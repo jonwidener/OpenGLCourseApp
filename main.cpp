@@ -13,12 +13,17 @@
 #include "Mesh.h"
 #include "Shader.h"
 #include "Window.h"
+#include "Camera.h"
 
 const float toRadians = 3.141592665f / 180.f;
 
 Window mainWindow;
 std::vector<Mesh*> meshList;
 std::vector<Shader> shaderList;
+Camera camera;
+
+GLfloat deltaTime = 0.f;
+GLfloat lastTime = 0.f;
 
 // Vertex Shader
 static const char* vShader = "Shaders/shader.vert";
@@ -63,14 +68,25 @@ int main(int argc, char** argv)
 	CreateObjects();
 	CreateShaders();
 
+	camera = Camera(glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 1.f, 0.f), -90.f, 0.f, 5.f, 0.5f);
+
 	GLuint uniformProjection = 0, uniformView = 0, uniformModel = 0;
 	glm::mat4 projection = glm::perspective(45.f, (GLfloat)mainWindow.getBufferWidth() / (GLfloat)mainWindow.getBufferHeight(), 0.1f, 100.f);
-	glm::mat4 view(1.0f);
+	glm::mat4 view;
 
 	// Loop until window closed
-	while (!mainWindow.getShouldClose()) {
+	while (!mainWindow.getShouldClose()) 
+	{
+		GLfloat now = glfwGetTime(); // SDL_GetPerformanceCounter();
+		deltaTime = now - lastTime; // (now - lastTime) * 1000 / SDL_GetPerformanceFrequency();
+		lastTime = now;
+
 		// Get & handle user input events
 		glfwPollEvents();
+
+		camera.keyControl(mainWindow.getKeys(), deltaTime);
+		camera.mouseControl(mainWindow.getXChange(), mainWindow.getYChange());
+		view = camera.calculateViewMatrix();
 
 		// Clear window
 		glClearColor(0.f, 0.f, 0.f, 1.f);
